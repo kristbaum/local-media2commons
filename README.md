@@ -17,3 +17,4 @@ A script to sync local MediaWiki media files to Wikimedia Commons.
 ```bash
 https://commons.wikimedia.org/w/api.php?action=query&list=allimages&aisha1=fcdfc17fac0c39e6f201f2022f9f1f9f8b35d449&format=json
 ```
+Ratelimit after 36680 rows in 12274.78 seconds. (over 3 hours)
