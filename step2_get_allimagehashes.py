@@ -39,7 +39,7 @@ def get_all_image_sha1s():
     return sha1_list
 
 
-def save_to_csv(sha1_data, filename="image_sha1_data.csv"):
+def save_to_csv(sha1_data, filename="step2_result.csv"):
     # Specify the field names (columns) for the CSV
     fieldnames = ["title", "sha1", "url"]
 
@@ -59,4 +59,4 @@ def save_to_csv(sha1_data, filename="image_sha1_data.csv"):
 sha1_data = get_all_image_sha1s()
 save_to_csv(sha1_data)
 
-print(f"Data has been saved to 'image_sha1_data.csv'")
+print(f"Data has been saved to 'step2_result.csv'")

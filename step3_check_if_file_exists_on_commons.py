@@ -91,9 +91,9 @@ def check_files_from_csv(
 
 
 # Example usage
-input_filename = "image_sha1_data.csv"  # Replace this with your actual CSV file name
+input_filename = "step2_result.csv"  # Replace this with your actual CSV file name
 output_filename = (
-    "commons_check_results.csv"  # Output file where the results will be saved
+    "step3_result.csv"  # Output file where the results will be saved
 )
 
 # Run the function to check SHA-1 hashes from the CSV, skipping the first 33,688 lines
