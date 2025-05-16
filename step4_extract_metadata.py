@@ -26,6 +26,36 @@ def chunked(iterable, size):
     for i in range(0, len(iterable), size):
         yield iterable[i:i + size]
 
+def transform_date(raw_date: str) -> str:
+    raw_date = raw_date.strip()
+    parts = raw_date.split("/")
+    if not parts:
+        return raw_date
+    
+    # Cases with leading '1/' prefix (to ignore)
+    if parts[0] == '1':
+        parts = parts[1:]
+    
+    # Handle by number of parts left
+    if len(parts) == 1:
+        # Only year
+        year = parts[0]
+        return year
+    elif len(parts) == 2:
+        # Year + month
+        year = parts[0]
+        month = parts[1].zfill(2)
+        return f"{year}-{month}"
+    elif len(parts) == 3:
+        # Year + month + day
+        year = parts[0]
+        month = parts[1].zfill(2)
+        day = parts[2].zfill(2)
+        return f"{year}-{month}-{day}"
+    else:
+        # Unexpected format, return as is
+        return raw_date
+
 # Step 3: Query SMW for each chunk
 results_all = []
 for chunk in chunked(list(title_to_row.keys()), 10): # Conservative chunk size
@@ -49,6 +79,9 @@ for chunk in chunked(list(title_to_row.keys()), 10): # Conservative chunk size
         base_row = title_to_row.get(title, {}).copy()
         for prop in properties:
             values = entry.get("printouts", {}).get(prop, [])
+            if len(values) > 0:
+                if prop == "Erstellungsdatum":
+                    values[0] = transform_date(values[0].get("raw"))
             base_row[prop] = "; ".join(str(v) for v in values)
         results_all.append(base_row)
     break

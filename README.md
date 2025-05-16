@@ -9,8 +9,9 @@ The plan is to make this process repeatable, to allow for continuous imports.
 1. Get a list of all files in the local MediaWiki installation (This can be done multiple ways, depending on the setup of the local MediaWiki)
 2. Extract the sha1 hash of each file -> implemented in step2_get_allimagehashes.py
 3. Check if the file is already in Wikimedia Commons -> implemented in step3_check_if_file_exists_on_commons.py
-4. Extract file and metadata from local MediaWiki. We will extract them focussing on the SemanticMediaWiki API
-5. Upload file to Wikimedia Commons
+4. Extract file and metadata from local MediaWiki. We will extract them focussing on the SemanticMediaWiki API using ask -> implemented in step4_extract_metadata.py
+5. Transform the saved metadata into a format usable by OpenRefine for uploads.
+6. Upload file to Wikimedia Commons with OpenRefine
 
 ## 3. Check SHA1 is in Wikimedia Commons
 
