@@ -1,22 +1,36 @@
 # Local-Media-2-Commons
 
-A script to sync local MediaWiki media files to Wikimedia Commons.
-This will be used to tranfer media files from FürthWiki initially.
-The plan is to make this process repeatable, to allow for continuous imports.
+A script to sync local MediaWiki media files to Wikimedia Commons.  
+Initially, this will be used to transfer media files from FürthWiki.  
 
-## Metodology
+The goal is to make this process repeatable, enabling repeatable imports.
 
-1. Get a list of all files in the local MediaWiki installation (This can be done multiple ways, depending on the setup of the local MediaWiki)
-2. Extract the sha1 hash of each file -> implemented in step2_get_allimagehashes.py
-3. Check if the file is already in Wikimedia Commons -> implemented in step3_check_if_file_exists_on_commons.py
-4. Extract file and metadata from local MediaWiki. We will extract them focussing on the SemanticMediaWiki API using ask -> implemented in step4_extract_metadata.py
-5. Transform the saved metadata into a format usable by OpenRefine for uploads.
-6. Upload file to Wikimedia Commons with OpenRefine
+---
 
-## 3. Check SHA1 is in Wikimedia Commons
+## Methodology
+
+1. **Get a list of all files in the local MediaWiki installation**  
+   This can be done in various ways depending on your local MediaWiki setup.
+
+2. **Extract the SHA1 hash of each file**  
+   Implemented in: `step2_get_allimagehashes.py`
+
+3. **Check if the file already exists on Wikimedia Commons**  
+   Implemented in: `step3_check_if_file_exists_on_commons.py`
+
+4. **Extract file metadata from the local MediaWiki**  
+   Focus on using the Semantic MediaWiki API with ASK queries.  
+   Implemented in: `step4_extract_metadata.py`
+
+5. **Transform the saved metadata**  
+   Convert metadata into a format usable by OpenRefine for uploading.
+
+6. **Upload files to Wikimedia Commons**  
+   Use OpenRefine for batch uploads.
+
+---
+
+## Example: Check if SHA1 hash exists on Wikimedia Commons
 
 ```bash
 https://commons.wikimedia.org/w/api.php?action=query&list=allimages&aisha1=fcdfc17fac0c39e6f201f2022f9f1f9f8b35d449&format=json
-```
-
-Ratelimit after 36680 rows in 12274.78 seconds. (over 3 hours)
