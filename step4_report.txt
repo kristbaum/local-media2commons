@@ -1,0 +1,23 @@
+FürthWiki Media Analysis Summary
+Generated: 2025-08-01 23:19:57
+
+Total images: 37,790
+On Commons: 362
+Not on Commons: 37,428
+
+Top 10 License distribution:
+  ✓ CC-BY-SA-3.0: 29,774 (78.8%)
+  ✗ Copyright: 2,287 (6.1%)
+  ✓ CC-BY-SA-4.0: 1,845 (4.9%)
+  ✗ NOC-NC-1.0: 1,640 (4.3%)
+  ✗ Stadtarchiv License: 1,020 (2.7%)
+  ✗ No license specified: 303 (0.8%)
+  ✗ CC-BY-NC-3.0: 247 (0.7%)
+  ✓ Public Domain: 116 (0.3%)
+  ✗ CC-BY-NC-SA-3.0: 94 (0.2%)
+  ✗ Yad Vashem License: 84 (0.2%)
+
+Metadata completeness:
+  Description: 37,362 (98.9%)
+  Author: 32,363 (85.6%)
+  Source: 35,051 (92.8%)
