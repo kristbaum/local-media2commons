@@ -84,7 +84,6 @@ for chunk in chunked(list(title_to_row.keys()), 10): # Conservative chunk size
                     values[0] = transform_date(values[0].get("raw"))
             base_row[prop] = "; ".join(str(v) for v in values)
         results_all.append(base_row)
-    break
 
 # Step 4: Determine output columns
 original_fields = list(input_rows[0].keys())

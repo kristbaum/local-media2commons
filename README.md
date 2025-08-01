@@ -34,3 +34,17 @@ The goal is to make this process repeatable, enabling repeatable imports.
 
 ```bash
 https://commons.wikimedia.org/w/api.php?action=query&list=allimages&aisha1=fcdfc17fac0c39e6f201f2022f9f1f9f8b35d449&format=json
+```
+
+## Template to modify metadata into
+
+```
+=={{int:filedesc}}==
+{{Information}}
+
+=={{int:license-header}}==
+{{self|CC-BY-SA-4.0}} <!-- make sure to adjust to the correct license template, even if you also provide copyright and license info in the structured data–->
+
+[[Category:Your category 1]]
+[[Category:Your category 2]]
+```
