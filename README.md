@@ -48,3 +48,24 @@ https://commons.wikimedia.org/w/api.php?action=query&list=allimages&aisha1=fcdfc
 [[Category:Your category 1]]
 [[Category:Your category 2]]
 ```
+
+## Todos
+
+Problem: Most of the files described tagged with CC licences are in fact often more strictly licenced.
+A Game should let people determine if the images are truly correctly licenced, by including most of the structured data and Wikitext with the image itself.
+Also using Instant Commons would be nice.
+
+If the licence is in question:
+
+* Remove the cc Template from FürthWiki (Hard)
+* Change the semantic licence on FürthWiki to copyrighted (Doable) (Maybe clean up the difference afterwards)
+* Don't upload to commons
+
+If the licence is correct:
+
+* Upload to commons:
+  * Include wikitext with {{Information}} template
+  * Add structured data for licence
+  * Backlink to FürthWiki
+* Change FürthWiki <https://www.fuerthwiki.de/wiki/index.php?title=Attribut:UploadCommons> to True
+* Maybe add an attribute that links directly to the file
