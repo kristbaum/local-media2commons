@@ -10,7 +10,6 @@ import os
 import time
 import hashlib
 import re
-from urllib.parse import urlparse, unquote
 import mwclient
 from datetime import datetime
 
