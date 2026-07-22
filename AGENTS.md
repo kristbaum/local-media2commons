@@ -10,7 +10,7 @@ uv sync                      # create .venv and install dependencies
 uv run pytest                # full test suite (fast, no network)
 uv run pytest tests/test_licenses.py -k markup   # a single test
 uv add <package>             # add a dependency (never edit pyproject deps by hand)
-uv run m2c-step4-report      # run a pipeline step; --help lists options
+uv run m2c-step3-report      # run a pipeline step; --help lists options
 ```
 
 Always run commands through `uv run` — there is no other supported way to get the
@@ -45,7 +45,7 @@ one place.
 Tests use pytest and live in `tests/`, one file per step or concept. **No test may touch
 the network.** `tests/helpers.py` provides `FakeSession`/`FakeResponse` (queue up
 responses, or a `(url, params) -> FakeResponse` callable for request-dependent replies)
-and `step4_row()` for building metadata fixtures; `FakeSite` in `tests/test_step6_upload.py`
+and `step3_row()` for building metadata fixtures; `FakeSite` in `tests/test_step5_upload.py`
 stands in for `mwclient.Site`. Use `tmp_path` for anything that writes files.
 
 When touching license or date parsing, add the real-world input that motivated the
@@ -54,16 +54,16 @@ are not guessable.
 
 ## Data and safety
 
-- `data/` holds committed inputs and results. `data/step2_result.csv`,
-  `step3_result.csv`, `step4_result.csv` and `step4_report.txt` are checked in; do not
+- `data/` holds committed inputs and results. `data/step1_result.csv`,
+  `step2_result.csv`, `step3_result.csv` and `step3_report.txt` are checked in; do not
   regenerate or overwrite them as a side effect of testing. Point steps at
-  `--output /tmp/...` when smoke-testing. Note that `step4_report.txt` came from a full
-  37,790-file run while the committed `step4_result.csv` is a small sample, so they do
+  `--output /tmp/...` when smoke-testing. Note that `step3_report.txt` came from a full
+  37,790-file run while the committed `step3_result.csv` is a small sample, so they do
   not match.
-- Step 3 makes one Commons API request per file and step 6 uploads to a live public
+- Step 2 makes one Commons API request per file and step 5 uploads to a live public
   wiki. Never run either against real endpoints without being asked, and keep the
   throttling defaults (`--delay`) intact.
-- Step 6 verifies every download's SHA-1 against the hash from step 2 before uploading.
+- Step 5 verifies every download's SHA-1 against the hash from step 1 before uploading.
   That check is the guard against uploading the wrong file under someone else's name —
   do not weaken or bypass it.
 - Only licenses in `licenses.COMMONS_TEMPLATES` may be uploaded. Widening that set is a

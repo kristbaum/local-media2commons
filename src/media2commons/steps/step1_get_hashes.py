@@ -1,6 +1,6 @@
-"""Step 2: list every file in the local wiki together with its SHA-1 hash.
+"""Step 1: list every file in the local wiki together with its SHA-1 hash.
 
-Reads: the local wiki API. Writes: ``data/step2_result.csv``.
+Reads: the local wiki API. Writes: ``data/step1_result.csv``.
 """
 
 from __future__ import annotations
@@ -10,7 +10,7 @@ from pathlib import Path
 
 import requests
 
-from ..config import LOCAL_WIKI_API, LOCAL_WIKI_FILE_PAGE, STEP2_RESULT
+from ..config import LOCAL_WIKI_API, LOCAL_WIKI_FILE_PAGE, STEP1_RESULT
 from ..csv_io import write_rows
 from ..mediawiki import iter_all_images, make_session
 
@@ -37,7 +37,7 @@ def collect_hashes(
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--api-url", default=LOCAL_WIKI_API, help="local wiki API URL")
-    parser.add_argument("--output", type=Path, default=STEP2_RESULT)
+    parser.add_argument("--output", type=Path, default=STEP1_RESULT)
     args = parser.parse_args()
 
     session = make_session()

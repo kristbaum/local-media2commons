@@ -1,6 +1,6 @@
-"""Step 3: check for every hash whether that file already exists on Commons.
+"""Step 2: check for every hash whether that file already exists on Commons.
 
-Reads: ``data/step2_result.csv``. Appends to: ``data/step3_result.csv``.
+Reads: ``data/step1_result.csv``. Appends to: ``data/step2_result.csv``.
 
 The run is long and rate-limited, so results are appended row by row and an
 interrupted run resumes after the rows already written.
@@ -14,7 +14,7 @@ from pathlib import Path
 
 import requests
 
-from ..config import STEP2_RESULT, STEP3_RESULT
+from ..config import STEP1_RESULT, STEP2_RESULT
 from ..csv_io import append_row, iter_rows
 from ..mediawiki import make_session, sha1_exists_on_commons
 
@@ -34,8 +34,8 @@ def rows_already_done(output_path: str | Path) -> int:
 
 def check_files(
     session: requests.Session,
-    input_path: str | Path = STEP2_RESULT,
-    output_path: str | Path = STEP3_RESULT,
+    input_path: str | Path = STEP1_RESULT,
+    output_path: str | Path = STEP2_RESULT,
     skip: int = 0,
     limit: int | None = None,
     delay: float = REQUEST_DELAY,
@@ -76,8 +76,8 @@ def check_files(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input", type=Path, default=STEP2_RESULT)
-    parser.add_argument("--output", type=Path, default=STEP3_RESULT)
+    parser.add_argument("--input", type=Path, default=STEP1_RESULT)
+    parser.add_argument("--output", type=Path, default=STEP2_RESULT)
     parser.add_argument(
         "--skip",
         type=int,

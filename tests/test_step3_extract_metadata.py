@@ -1,4 +1,4 @@
-from media2commons.steps.step4_extract_metadata import (
+from media2commons.steps.step3_extract_metadata import (
     chunked,
     extract_metadata,
     format_property_values,

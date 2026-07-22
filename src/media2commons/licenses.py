@@ -1,8 +1,8 @@
 """Normalisation of the free-form ``Lizenz`` values coming out of the local wiki.
 
 The SMW property holds anything from a clean ``cc-by-sa-3.0`` to a whole wiki
-table pasted into the field, so every consumer (the step 4 report and the
-step 5 transform) needs the same cleanup. Canonical names produced here are the
+table pasted into the field, so every consumer (the step 3 report and the
+step 4 transform) needs the same cleanup. Canonical names produced here are the
 keys used by :func:`is_commons_compatible` and :func:`license_template`.
 """
 

@@ -48,8 +48,8 @@ class FakeSession:
         return response(url, params) if callable(response) else response
 
 
-def step4_row(**overrides) -> dict[str, str]:
-    """A step 4 result row with sensible defaults, for building fixtures."""
+def step3_row(**overrides) -> dict[str, str]:
+    """A step 3 result row with sensible defaults, for building fixtures."""
     row = {
         "title": "Datei:Rathaus.jpg",
         "sha1": "abc123",

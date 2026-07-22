@@ -8,7 +8,7 @@ LOCAL_WIKI_API = "https://www.fuerthwiki.de/wiki/api.php"
 LOCAL_WIKI_BASE = "https://www.fuerthwiki.de"
 LOCAL_WIKI_FILE_PAGE = "https://www.fuerthwiki.de/wiki/index.php/{title}"
 
-# Semantic MediaWiki properties fetched in step 4.
+# Semantic MediaWiki properties fetched in step 3.
 SMW_PROPERTIES = [
     "Beschreibung",
     "Erstellungsdatum",
@@ -36,9 +36,9 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = PROJECT_ROOT / "data"
 DOWNLOAD_DIR = PROJECT_ROOT / "downloads"
 
+STEP1_RESULT = DATA_DIR / "step1_result.csv"
 STEP2_RESULT = DATA_DIR / "step2_result.csv"
 STEP3_RESULT = DATA_DIR / "step3_result.csv"
-STEP4_RESULT = DATA_DIR / "step4_result.csv"
-STEP4_REPORT = DATA_DIR / "step4_report.txt"
-STEP5_RESULT = DATA_DIR / "step5_commons_ready.csv"
-STEP6_LOG = DATA_DIR / "step6_upload_log.csv"
+STEP3_REPORT = DATA_DIR / "step3_report.txt"
+STEP4_RESULT = DATA_DIR / "step4_commons_ready.csv"
+STEP5_LOG = DATA_DIR / "step5_upload_log.csv"

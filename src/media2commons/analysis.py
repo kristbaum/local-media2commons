@@ -1,4 +1,4 @@
-"""Aggregate statistics over the step 4 metadata dump."""
+"""Aggregate statistics over the step 3 metadata dump."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ COMPLETENESS_FIELDS = {
 
 @dataclass
 class MediaStats:
-    """Counts derived from a full pass over the step 4 rows."""
+    """Counts derived from a full pass over the step 3 rows."""
 
     total_images: int = 0
     exists_on_commons: int = 0
@@ -57,7 +57,7 @@ def row_is_on_commons(row: dict[str, str]) -> bool:
 
 
 def analyze_rows(rows: Iterable[dict[str, str]]) -> MediaStats:
-    """Collect :class:`MediaStats` from step 4 result rows."""
+    """Collect :class:`MediaStats` from step 3 result rows."""
     stats = MediaStats()
 
     for row in rows:

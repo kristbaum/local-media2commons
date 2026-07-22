@@ -1,4 +1,4 @@
-"""Driving download-then-upload for a batch of step 5 rows."""
+"""Driving download-then-upload for a batch of step 4 rows."""
 
 from __future__ import annotations
 

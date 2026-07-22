@@ -62,7 +62,7 @@ def file_sha1(path: str | Path) -> str:
 
 
 def verify_sha1(path: str | Path, expected_sha1: str) -> bool:
-    """Whether a downloaded file matches the SHA-1 recorded in step 2."""
+    """Whether a downloaded file matches the SHA-1 recorded in step 1."""
     if not expected_sha1:
         return False
     return file_sha1(path).lower() == expected_sha1.strip().lower()

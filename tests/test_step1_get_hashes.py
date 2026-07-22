@@ -1,5 +1,5 @@
 from media2commons.csv_io import read_rows, write_rows
-from media2commons.steps.step2_get_hashes import FIELDS, collect_hashes, image_row
+from media2commons.steps.step1_get_hashes import FIELDS, collect_hashes, image_row
 
 
 def page(images, cont=None):
@@ -42,7 +42,7 @@ def test_rows_are_written_with_the_expected_columns(
     session = fake_session(
         [fake_response(page([{"title": "Datei:A.jpg", "sha1": "a"}]))]
     )
-    path = tmp_path / "step2.csv"
+    path = tmp_path / "step1.csv"
 
     write_rows(path, collect_hashes(session, "https://wiki.example/api.php"), FIELDS)
 

@@ -1,6 +1,6 @@
-"""Step 4: pull Semantic MediaWiki metadata for every file.
+"""Step 3: pull Semantic MediaWiki metadata for every file.
 
-Reads: ``data/step3_result.csv``. Writes: ``data/step4_result.csv``.
+Reads: ``data/step2_result.csv``. Writes: ``data/step3_result.csv``.
 
 Titles are queried in small batches via the SMW ASK API; only files the query
 returns metadata for end up in the output.
@@ -14,7 +14,7 @@ from pathlib import Path
 
 import requests
 
-from ..config import LOCAL_WIKI_API, SMW_PROPERTIES, STEP3_RESULT, STEP4_RESULT
+from ..config import LOCAL_WIKI_API, SMW_PROPERTIES, STEP2_RESULT, STEP3_RESULT
 from ..csv_io import read_rows, write_rows
 from ..dates import normalize_smw_date
 from ..mediawiki import ask, build_ask_query, make_session
@@ -43,7 +43,7 @@ def format_property_values(prop: str, values: list) -> str:
 def metadata_row(
     base_row: dict[str, str], entry: dict, properties: Sequence[str]
 ) -> dict[str, str]:
-    """Merge one ASK result entry into the corresponding step 3 row."""
+    """Merge one ASK result entry into the corresponding step 2 row."""
     row = dict(base_row)
     printouts = entry.get("printouts", {})
     for prop in properties:
@@ -84,8 +84,8 @@ def output_fields(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input", type=Path, default=STEP3_RESULT)
-    parser.add_argument("--output", type=Path, default=STEP4_RESULT)
+    parser.add_argument("--input", type=Path, default=STEP2_RESULT)
+    parser.add_argument("--output", type=Path, default=STEP3_RESULT)
     parser.add_argument("--api-url", default=LOCAL_WIKI_API)
     parser.add_argument("--chunk-size", type=int, default=CHUNK_SIZE)
     parser.add_argument("-v", "--verbose", action="store_true", help="print ASK queries")

@@ -1,4 +1,4 @@
-"""Turning step 4 metadata rows into upload-ready Commons rows."""
+"""Turning step 3 metadata rows into upload-ready Commons rows."""
 
 from __future__ import annotations
 

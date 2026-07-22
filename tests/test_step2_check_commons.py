@@ -2,7 +2,7 @@ import pytest
 from helpers import FakeResponse
 
 from media2commons.csv_io import read_rows, write_rows
-from media2commons.steps.step3_check_commons import (
+from media2commons.steps.step2_check_commons import (
     check_files,
     rows_already_done,
 )
@@ -12,7 +12,7 @@ INPUT_FIELDS = ["title", "sha1", "url"]
 
 @pytest.fixture
 def input_csv(tmp_path):
-    path = tmp_path / "step2.csv"
+    path = tmp_path / "step1.csv"
     write_rows(
         path,
         [
@@ -35,7 +35,7 @@ def found(sha1s):
 
 
 def test_each_row_gets_a_verdict(tmp_path, input_csv, fake_session):
-    output = tmp_path / "step3.csv"
+    output = tmp_path / "step2.csv"
     session = fake_session([found({"hash1"})] * 3)
 
     processed = check_files(session, input_csv, output, delay=0)
@@ -49,7 +49,7 @@ def test_each_row_gets_a_verdict(tmp_path, input_csv, fake_session):
 
 
 def test_skip_and_limit_select_a_window(tmp_path, input_csv, fake_session):
-    output = tmp_path / "step3.csv"
+    output = tmp_path / "step2.csv"
     session = fake_session([found(set())] * 3)
 
     processed = check_files(session, input_csv, output, skip=1, limit=1, delay=0)
@@ -62,7 +62,7 @@ def test_failed_lookups_are_not_written(tmp_path, input_csv, fake_session):
     def boom(url, params):
         raise RuntimeError("API is down")
 
-    output = tmp_path / "step3.csv"
+    output = tmp_path / "step2.csv"
     session = fake_session([found(set()), boom, found(set())])
 
     processed = check_files(session, input_csv, output, delay=0)
@@ -72,7 +72,7 @@ def test_failed_lookups_are_not_written(tmp_path, input_csv, fake_session):
 
 
 def test_rows_already_done_counts_partial_output(tmp_path, input_csv, fake_session):
-    output = tmp_path / "step3.csv"
+    output = tmp_path / "step2.csv"
     assert rows_already_done(output) == 0
 
     check_files(fake_session([found(set())]), input_csv, output, limit=1, delay=0)
@@ -80,7 +80,7 @@ def test_rows_already_done_counts_partial_output(tmp_path, input_csv, fake_sessi
 
 
 def test_resuming_continues_where_it_stopped(tmp_path, input_csv, fake_session):
-    output = tmp_path / "step3.csv"
+    output = tmp_path / "step2.csv"
     check_files(fake_session([found(set())]), input_csv, output, limit=1, delay=0)
 
     check_files(

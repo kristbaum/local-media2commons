@@ -8,7 +8,7 @@ from pathlib import Path
 
 import mwclient
 
-from .config import COMMONS_FILE_URL, COMMONS_SITE, STEP6_LOG, USER_AGENT
+from .config import COMMONS_FILE_URL, COMMONS_SITE, STEP5_LOG, USER_AGENT
 from .csv_io import append_row
 
 LOG_FIELDS = ["timestamp", "filename", "status", "commons_url", "error_message"]
@@ -19,7 +19,7 @@ DEFAULT_COMMENT = "Uploaded from FürthWiki"
 class UploadLog:
     """Append-only CSV log of every upload attempt, so runs can be resumed."""
 
-    def __init__(self, path: str | Path = STEP6_LOG):
+    def __init__(self, path: str | Path = STEP5_LOG):
         self.path = Path(path)
 
     def record(

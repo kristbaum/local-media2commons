@@ -1,6 +1,6 @@
-"""Step 6: download the prepared files and upload them to Wikimedia Commons.
+"""Step 5: download the prepared files and upload them to Wikimedia Commons.
 
-Reads: ``data/step5_commons_ready.csv``. Writes: ``data/step6_upload_log.csv``
+Reads: ``data/step4_commons_ready.csv``. Writes: ``data/step5_upload_log.csv``
 and the downloaded originals into ``downloads/``.
 
 Credentials come from ``COMMONS_USERNAME``/``COMMONS_PASSWORD`` (use a bot
@@ -16,7 +16,7 @@ import itertools
 import os
 from pathlib import Path
 
-from ..config import DOWNLOAD_DIR, STEP5_RESULT, STEP6_LOG
+from ..config import DOWNLOAD_DIR, STEP4_RESULT, STEP5_LOG
 from ..csv_io import iter_rows
 from ..mediawiki import make_session
 from ..upload_batch import run_batch
@@ -47,8 +47,8 @@ def print_result(row: dict[str, str], result: UploadResult) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input", type=Path, default=STEP5_RESULT)
-    parser.add_argument("--log", type=Path, default=STEP6_LOG)
+    parser.add_argument("--input", type=Path, default=STEP4_RESULT)
+    parser.add_argument("--log", type=Path, default=STEP5_LOG)
     parser.add_argument("--download-dir", type=Path, default=DOWNLOAD_DIR)
     parser.add_argument("--username", default=None, help="Commons account name")
     parser.add_argument("--start-from", type=int, default=0, help="skip N rows")
@@ -60,7 +60,7 @@ def main() -> None:
     args = parser.parse_args()
 
     if not args.input.exists():
-        raise SystemExit(f"Input file not found: {args.input}. Run step 5 first.")
+        raise SystemExit(f"Input file not found: {args.input}. Run step 4 first.")
 
     username, password = get_credentials(args.username)
 

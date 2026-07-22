@@ -22,23 +22,32 @@ both as a console script and as a module.
 
 | Step | Command | Reads | Writes |
 | --- | --- | --- | --- |
-| 2. List files + hashes | `uv run m2c-step2-hashes` | local wiki API | `data/step2_result.csv` |
-| 3. Check against Commons | `uv run m2c-step3-commons-check` | `step2_result.csv` | `data/step3_result.csv` |
-| 4. Extract SMW metadata | `uv run m2c-step4-metadata` | `step3_result.csv` | `data/step4_result.csv` |
-| 4b. Analysis report | `uv run m2c-step4-report` | `step4_result.csv` | `data/step4_report.txt` |
-| 5. Transform for Commons | `uv run m2c-step5-transform` | `step4_result.csv` | `data/step5_commons_ready.csv` |
-| 6. Upload | `uv run m2c-step6-upload` | `step5_commons_ready.csv` | `data/step6_upload_log.csv` |
+| 1. List files + hashes | `uv run m2c-step1-hashes` | local wiki API | `data/step1_result.csv` |
+| 2. Check against Commons | `uv run m2c-step2-commons-check` | `step1_result.csv` | `data/step2_result.csv` |
+| 3. Extract SMW metadata | `uv run m2c-step3-metadata` | `step2_result.csv` | `data/step3_result.csv` |
+| 3b. Analysis report | `uv run m2c-step3-report` | `step3_result.csv` | `data/step3_report.txt` |
+| 4. Transform for Commons | `uv run m2c-step4-transform` | `step3_result.csv` | `data/step4_commons_ready.csv` |
+| 5. Upload | `uv run m2c-step5-upload` | `step4_commons_ready.csv` | `data/step5_upload_log.csv` |
 
-Step 1 — getting a list of files out of the local MediaWiki — is covered by step 2,
-which queries the API directly. Every step takes `--input`/`--output` overrides; run any
-of them with `--help` for the full set of options.
+Every step takes `--input`/`--output` overrides; run any of them with `--help` for the
+full set of options.
 
-### Step 2 — collect file hashes
+### Step 1 — collect file hashes
 
 Pages through the `list=allimages` API of the local wiki with `aiprop=sha1`, following
 continuation until every file is listed, and records title, SHA-1 and file page URL.
+This is the query it issues, and the one to reach for when listing FürthWiki's files by
+hand:
 
-### Step 3 — check what is already on Commons
+```text
+https://www.fuerthwiki.de/wiki/api.php?action=query&list=allimages&ailimit=500&aiprop=sha1&format=json
+```
+
+Each response carries a `continue.aicontinue` token that has to be passed back as
+`&aicontinue=…` until it stops appearing — one page of 500 files is nowhere near the
+whole wiki.
+
+### Step 2 — check what is already on Commons
 
 Looks each SHA-1 up via `list=allimages&aisha1=…` on Commons; a non-empty result means
 the identical file is already there. This is the long-running step (one request per
@@ -50,7 +59,7 @@ to process an explicit window.
 https://commons.wikimedia.org/w/api.php?action=query&list=allimages&aisha1=fcdfc17fac0c39e6f201f2022f9f1f9f8b35d449&format=json
 ```
 
-### Step 4 — extract metadata
+### Step 3 — extract metadata
 
 Queries the Semantic MediaWiki ASK API in batches of 10 titles for the properties
 `Beschreibung`, `Erstellungsdatum`, `Erstellungsjahr`, `Lizenz`, `Person`,
@@ -60,7 +69,7 @@ Queries the Semantic MediaWiki ASK API in batches of 10 titles for the propertie
 The companion report step summarises license distribution, creation years and metadata
 completeness, and estimates how many files are actually uploadable.
 
-### Step 5 — transform for Commons
+### Step 4 — transform for Commons
 
 Filters to the files that may be uploaded — not already on Commons **and** carrying a
 Commons-compatible license (CC-BY-SA-3.0/4.0, CC-BY-3.0/4.0, Public Domain, GFDL) — and
@@ -89,20 +98,20 @@ The `Lizenz` property is free-form text on the source wiki — anything from a c
 markup and mapped onto canonical names before the compatibility check
 ([licenses.py](src/media2commons/licenses.py)).
 
-### Step 6 — upload
+### Step 5 — upload
 
 For each prepared row: resolve the original (non-thumbnail) file URL from its wiki page,
-download it, verify the SHA-1 against the hash recorded in step 2, and upload it to
+download it, verify the SHA-1 against the hash recorded in step 1, and upload it to
 Commons via `mwclient`. Files whose hash does not match are never uploaded, and a file
 that already exists on Commons is skipped. Every attempt is logged to
-`data/step6_upload_log.csv`.
+`data/step5_upload_log.csv`.
 
 Credentials are read from `COMMONS_USERNAME` and `COMMONS_PASSWORD` (use a
 [bot password](https://commons.wikimedia.org/wiki/Special:BotPasswords)) and prompted for
 otherwise. The run asks for confirmation unless `--yes` is given. Start small:
 
 ```bash
-COMMONS_USERNAME=YourBot COMMONS_PASSWORD=… uv run m2c-step6-upload --max-files 5
+COMMONS_USERNAME=YourBot COMMONS_PASSWORD=… uv run m2c-step5-upload --max-files 5
 ```
 
 ## Project layout
@@ -115,12 +124,12 @@ src/media2commons/
   licenses.py      license normalisation and Commons compatibility
   dates.py         SMW date parsing and year extraction
   wikitext.py      Commons file description page rendering
-  transform.py     step 4 rows -> upload-ready rows
+  transform.py     step 3 rows -> upload-ready rows
   analysis.py      statistics over the metadata dump
   reporting.py     text rendering of those statistics
   downloader.py    file URL resolution, download, SHA-1 verification
   uploader.py      Commons login, upload, upload log
-  upload_batch.py  per-file and batch orchestration for step 6
+  upload_batch.py  per-file and batch orchestration for step 5
   steps/           one CLI entry point per pipeline step
 tests/             pytest suite; no test touches the network
 data/              inputs and results of each step

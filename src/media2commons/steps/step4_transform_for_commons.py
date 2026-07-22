@@ -1,6 +1,6 @@
-"""Step 5: keep only uploadable files and render their Commons wikitext.
+"""Step 4: keep only uploadable files and render their Commons wikitext.
 
-Reads: ``data/step4_result.csv``. Writes: ``data/step5_commons_ready.csv``.
+Reads: ``data/step3_result.csv``. Writes: ``data/step4_commons_ready.csv``.
 """
 
 from __future__ import annotations
@@ -9,25 +9,25 @@ import argparse
 from collections import Counter
 from pathlib import Path
 
-from ..config import STEP4_RESULT, STEP5_RESULT
+from ..config import STEP3_RESULT, STEP4_RESULT
 from ..csv_io import iter_rows, write_rows
 from ..transform import COMMONS_READY_FIELDS, transform_rows
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input", type=Path, default=STEP4_RESULT)
-    parser.add_argument("--output", type=Path, default=STEP5_RESULT)
+    parser.add_argument("--input", type=Path, default=STEP3_RESULT)
+    parser.add_argument("--output", type=Path, default=STEP4_RESULT)
     args = parser.parse_args()
 
     if not args.input.exists():
-        raise SystemExit(f"Input file not found: {args.input}. Run step 4 first.")
+        raise SystemExit(f"Input file not found: {args.input}. Run step 3 first.")
 
     rows = list(transform_rows(iter_rows(args.input)))
     write_rows(args.output, rows, COMMONS_READY_FIELDS)
 
     print("=" * 60)
-    print("STEP 5: COMMONS TRANSFORMATION COMPLETE")
+    print("STEP 4: COMMONS TRANSFORMATION COMPLETE")
     print("=" * 60)
     print(f"Files ready for upload: {len(rows):,}")
     print(f"Output saved to: {args.output}")

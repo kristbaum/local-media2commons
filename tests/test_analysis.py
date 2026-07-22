@@ -1,15 +1,15 @@
 from datetime import datetime
 
-from helpers import step4_row
+from helpers import step3_row
 
 from media2commons.analysis import analyze_rows, row_is_on_commons
 from media2commons.reporting import render_report, render_summary
 
 ROWS = [
-    step4_row(title="Datei:A.jpg", Lizenz="cc-by-sa-3.0", Erstellungsdatum="1950"),
-    step4_row(title="Datei:B.jpg", Lizenz="cc-by-sa-3.0", Erstellungsdatum="1955"),
-    step4_row(title="Datei:C.jpg", Lizenz="copyright", Erstellungsdatum="1962"),
-    step4_row(
+    step3_row(title="Datei:A.jpg", Lizenz="cc-by-sa-3.0", Erstellungsdatum="1950"),
+    step3_row(title="Datei:B.jpg", Lizenz="cc-by-sa-3.0", Erstellungsdatum="1955"),
+    step3_row(title="Datei:C.jpg", Lizenz="copyright", Erstellungsdatum="1962"),
+    step3_row(
         title="Datei:D.jpg",
         Lizenz="",
         Erstellungsdatum="",
