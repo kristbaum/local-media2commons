@@ -1,1 +1,7 @@
 .venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+downloads/
+data/step5_commons_ready.csv
+data/step6_upload_log.csv

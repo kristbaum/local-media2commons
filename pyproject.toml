@@ -1,0 +1,34 @@
+[project]
+name = "local-media2commons"
+version = "0.1.0"
+description = "Sync local MediaWiki media files to Wikimedia Commons"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.11"
+dependencies = [
+    "requests>=2.25.0",
+    "mwclient>=0.10.0",
+]
+
+[project.scripts]
+m2c-step2-hashes = "media2commons.steps.step2_get_hashes:main"
+m2c-step3-commons-check = "media2commons.steps.step3_check_commons:main"
+m2c-step4-metadata = "media2commons.steps.step4_extract_metadata:main"
+m2c-step4-report = "media2commons.steps.step4_generate_report:main"
+m2c-step5-transform = "media2commons.steps.step5_transform_for_commons:main"
+m2c-step6-upload = "media2commons.steps.step6_upload_to_commons:main"
+
+[build-system]
+requires = ["uv_build>=0.11,<0.12"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "media2commons"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
