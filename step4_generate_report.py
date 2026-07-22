@@ -5,9 +5,8 @@ Generates a comprehensive report on the media files data with better license par
 """
 
 import csv
-import json
 import re
-from collections import Counter, defaultdict
+from collections import Counter
 from datetime import datetime
 
 # Input file
@@ -291,7 +290,7 @@ if __name__ == "__main__":
         # Save clean summary to file
         summary_file = "step4_clean_analysis_summary.txt"
         with open(summary_file, 'w', encoding='utf-8') as f:
-            f.write(f"FürthWiki Media Analysis Summary\n")
+            f.write("FürthWiki Media Analysis Summary\n")
             f.write(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
             f.write(f"Total images: {data['total_images']:,}\n")
             f.write(f"On Commons: {data['exists_on_commons']:,}\n")
@@ -302,7 +301,7 @@ if __name__ == "__main__":
                 compatible = "✓" if is_commons_compatible_license(license_name) else "✗"
                 f.write(f"  {compatible} {license_name}: {count:,} ({pct:.1f}%)\n")
             
-            f.write(f"\nMetadata completeness:\n")
+            f.write("\nMetadata completeness:\n")
             f.write(f"  Description: {data['has_description']:,} ({data['has_description']/data['total_images']*100:.1f}%)\n")
             f.write(f"  Author: {data['has_author']:,} ({data['has_author']/data['total_images']*100:.1f}%)\n")
             f.write(f"  Source: {data['has_source']:,} ({data['has_source']/data['total_images']*100:.1f}%)\n")

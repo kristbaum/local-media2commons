@@ -1,6 +1,5 @@
 import csv
 import requests
-import json
 
 # Files
 INPUT_FILE = "step3_result.csv"

@@ -59,4 +59,4 @@ def save_to_csv(sha1_data, filename="step2_result.csv"):
 sha1_data = get_all_image_sha1s()
 save_to_csv(sha1_data)
 
-print(f"Data has been saved to 'step2_result.csv'")
+print("Data has been saved to 'step2_result.csv'")
