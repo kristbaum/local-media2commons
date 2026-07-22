@@ -64,6 +64,14 @@ def test_extract_metadata_batches_titles(fake_session, fake_response):
     assert [row["title"] for row in results] == ["Datei:0.jpg", "Datei:2.jpg"]
 
 
+def test_batch_without_any_metadata_is_skipped(fake_session, fake_response):
+    """SMW answers a batch it knows nothing about with a list, not an object."""
+    rows = [{"title": "Datei:0.jpg", "sha1": "0", "url": "u"}]
+    session = fake_session([fake_response({"query": {"results": []}})])
+
+    assert extract_metadata(session, rows, PROPERTIES) == []
+
+
 def test_output_fields_appends_new_properties_only():
     rows = [{"title": "t", "sha1": "s", "url": "u", "Lizenz": "x"}]
     assert output_fields(rows, PROPERTIES) == [

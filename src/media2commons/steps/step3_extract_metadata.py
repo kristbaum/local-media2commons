@@ -17,7 +17,7 @@ import requests
 from ..config import LOCAL_WIKI_API, SMW_PROPERTIES, STEP2_RESULT, STEP3_RESULT
 from ..csv_io import read_rows, write_rows
 from ..dates import normalize_smw_date
-from ..mediawiki import ask, build_ask_query, make_session
+from ..mediawiki import ask, build_ask_query, format_printout, make_session
 
 # The ASK API rejects overly long queries, so keep batches conservative.
 CHUNK_SIZE = 10
@@ -32,12 +32,12 @@ def chunked(items: Sequence[str], size: int) -> Iterator[Sequence[str]]:
 
 
 def format_property_values(prop: str, values: list) -> str:
-    """Flatten an SMW printout list into a single ``; `` separated cell."""
+    """Flatten an SMW printout list, normalising date records on the way."""
     if values and prop in DATE_PROPERTIES:
         first = values[0]
         raw = first.get("raw") if isinstance(first, dict) else first
         values = [normalize_smw_date(raw), *values[1:]]
-    return "; ".join(str(value) for value in values)
+    return format_printout(values)
 
 
 def metadata_row(

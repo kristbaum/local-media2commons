@@ -17,8 +17,10 @@ import requests
 from ..config import STEP1_RESULT, STEP2_RESULT
 from ..csv_io import append_row, iter_rows
 from ..mediawiki import make_session, sha1_exists_on_commons
+from .step1_get_hashes import FIELDS as STEP1_FIELDS
 
-FIELDS = ["title", "sha1", "url", "exists_on_commons"]
+# Every input column is passed through, so the two lists cannot drift apart.
+FIELDS = [*STEP1_FIELDS, "exists_on_commons"]
 
 # Courtesy delay between Commons API calls.
 REQUEST_DELAY = 0.1

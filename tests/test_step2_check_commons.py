@@ -71,6 +71,30 @@ def test_failed_lookups_are_not_written(tmp_path, input_csv, fake_session):
     assert [row["sha1"] for row in read_rows(output)] == ["hash0", "hash2"]
 
 
+def test_step1_commons_columns_are_passed_through(tmp_path, fake_session):
+    input_path = tmp_path / "step1.csv"
+    write_rows(
+        input_path,
+        [
+            {
+                "title": "Datei:0.jpg",
+                "sha1": "hash0",
+                "url": "u0",
+                "UploadCommons": "False",
+                "CommonsLink": "https://commons.wikimedia.org/wiki/File:0.jpg",
+            }
+        ],
+        [*INPUT_FIELDS, "UploadCommons", "CommonsLink"],
+    )
+    output = tmp_path / "step2.csv"
+
+    check_files(fake_session([found(set())]), input_path, output, delay=0)
+
+    row = read_rows(output)[0]
+    assert row["UploadCommons"] == "False"
+    assert row["CommonsLink"].endswith("File:0.jpg")
+
+
 def test_rows_already_done_counts_partial_output(tmp_path, input_csv, fake_session):
     output = tmp_path / "step2.csv"
     assert rows_already_done(output) == 0

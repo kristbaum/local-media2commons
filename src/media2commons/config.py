@@ -8,6 +8,10 @@ LOCAL_WIKI_API = "https://www.fuerthwiki.de/wiki/api.php"
 LOCAL_WIKI_BASE = "https://www.fuerthwiki.de"
 LOCAL_WIKI_FILE_PAGE = "https://www.fuerthwiki.de/wiki/index.php/{title}"
 
+# Semantic MediaWiki properties recording what the source wiki already considers
+# transferred. Read in step 1, next to the file list itself.
+SMW_COMMONS_PROPERTIES = ["UploadCommons", "CommonsLink"]
+
 # Semantic MediaWiki properties fetched in step 3.
 SMW_PROPERTIES = [
     "Beschreibung",

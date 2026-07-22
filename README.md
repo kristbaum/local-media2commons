@@ -22,7 +22,7 @@ both as a console script and as a module.
 
 | Step | Command | Reads | Writes |
 | --- | --- | --- | --- |
-| 1. List files + hashes | `uv run m2c-step1-hashes` | local wiki API | `data/step1_result.csv` |
+| 1. List files, hashes, transfer status | `uv run m2c-step1-hashes` | local wiki API | `data/step1_result.csv` |
 | 2. Check against Commons | `uv run m2c-step2-commons-check` | `step1_result.csv` | `data/step2_result.csv` |
 | 3. Extract SMW metadata | `uv run m2c-step3-metadata` | `step2_result.csv` | `data/step3_result.csv` |
 | 3b. Analysis report | `uv run m2c-step3-report` | `step3_result.csv` | `data/step3_report.txt` |
@@ -32,7 +32,7 @@ both as a console script and as a module.
 Every step takes `--input`/`--output` overrides; run any of them with `--help` for the
 full set of options.
 
-### Step 1 — collect file hashes
+### Step 1 — collect file hashes and transfer status
 
 Pages through the `list=allimages` API of the local wiki with `aiprop=sha1`, following
 continuation until every file is listed, and records title, SHA-1 and file page URL.
@@ -46,6 +46,30 @@ https://www.fuerthwiki.de/wiki/api.php?action=query&list=allimages&ailimit=500&a
 Each response carries a `continue.aicontinue` token that has to be passed back as
 `&aicontinue=…` until it stops appearing — one page of 500 files is nowhere near the
 whole wiki.
+
+The same run also reads what the wiki itself says about Commons, into two more columns:
+
+| Column | SMW property | Meaning |
+| --- | --- | --- |
+| `UploadCommons` | [Attribut:UploadCommons](https://www.fuerthwiki.de/wiki/index.php?title=Attribut:UploadCommons) | boolean — the file is on Commons |
+| `CommonsLink` | [Attribut:CommonsLink](https://www.fuerthwiki.de/wiki/index.php?title=Attribut:CommonsLink) | text — link to the file page on Commons |
+
+These are asked for by property rather than per title, so covering the whole wiki costs a
+handful of paged queries instead of one request per file:
+
+```text
+https://www.fuerthwiki.de/wiki/api.php?action=ask&query=[[UploadCommons::%2B]] OR [[CommonsLink::%2B]]|?UploadCommons|?CommonsLink|limit=500|offset=0&format=json
+```
+
+Paging continues with `offset=500`, `1000`, … until a page comes back short. A file the
+query says nothing about keeps both cells empty, which is distinct from an explicit
+`False`. SMW answers booleans with `t`/`f`; they are written out as `True`/`False` to
+match `exists_on_commons`. Use `--no-smw` on a wiki without Semantic MediaWiki: the
+columns stay in the CSV but are left empty.
+
+As of July 2026 the source wiki marks 733 files `UploadCommons=true` and sets
+`CommonsLink` on none, so the column is currently a record of past manual transfers
+rather than of anything this pipeline did.
 
 ### Step 2 — check what is already on Commons
 
