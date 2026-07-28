@@ -6,6 +6,7 @@ the user agent, retries and — in tests — substitute a fake transport.
 
 from __future__ import annotations
 
+import time
 from collections.abc import Iterable, Iterator, Sequence
 
 import requests
@@ -14,6 +15,16 @@ from .config import COMMONS_API, USER_AGENT
 
 # How many results to request per page of an ASK query.
 ASK_PAGE_SIZE = 500
+
+# Wikimedia answers 429 once a client is over its rate limit and 503 when the
+# backend is lagging. Both mean "come back later", not "this row is broken", so
+# they are waited out instead of being reported as a failed lookup.
+RETRY_STATUSES = frozenset({429, 503})
+MAX_RETRIES = 5
+
+# What to wait when a 429 arrives without a Retry-After header; Wikimedia asks
+# for at least five seconds, doubling per attempt.
+BASE_RETRY_WAIT = 5.0
 
 # SMW answers boolean printouts with these tokens; the rest of the pipeline
 # writes Python-style booleans (see ``exists_on_commons``), so map them over.
@@ -28,11 +39,82 @@ def make_session(user_agent: str = USER_AGENT) -> requests.Session:
     return session
 
 
-def api_get(session: requests.Session, url: str, params: dict[str, str]) -> dict:
-    """GET a MediaWiki API endpoint and return the decoded JSON body."""
-    response = session.get(url, params={**params, "format": "json"})
+def retry_wait(response, attempt: int, base: float = BASE_RETRY_WAIT) -> float:
+    """Seconds to wait before retrying, honouring a ``Retry-After`` header."""
+    header = getattr(response, "headers", {}).get("Retry-After", "")
+    try:
+        return max(0.0, float(header))
+    except (TypeError, ValueError):
+        # Retry-After may also be an HTTP date; back off exponentially instead.
+        return base * 2**attempt
+
+
+def api_get(
+    session: requests.Session,
+    url: str,
+    params: dict[str, str],
+    retries: int = MAX_RETRIES,
+) -> dict:
+    """GET a MediaWiki API endpoint and return the decoded JSON body.
+
+    Rate-limit and overload responses are retried after the wait the server
+    asks for, so a throttled run slows down rather than losing rows.
+    """
+    for attempt in range(retries + 1):
+        response = session.get(url, params={**params, "format": "json"})
+        if response.status_code not in RETRY_STATUSES or attempt == retries:
+            break
+
+        wait = retry_wait(response, attempt)
+        print(f"HTTP {response.status_code} from the API; waiting {wait:.0f}s")
+        time.sleep(wait)
+
     response.raise_for_status()
     return response.json()
+
+
+def api_post(session: requests.Session, url: str, params: dict[str, str]) -> dict:
+    """POST to a MediaWiki API endpoint and return the decoded JSON body."""
+    response = session.post(url, data={**params, "format": "json"})
+    response.raise_for_status()
+    return response.json()
+
+
+def login(
+    session: requests.Session,
+    username: str,
+    password: str,
+    api_url: str = COMMONS_API,
+) -> None:
+    """Log `session` in to a wiki, raising if the credentials are rejected.
+
+    Authenticated clients get a much higher API rate limit than anonymous ones,
+    which is what makes the per-file lookups of step 2 survive a full run. Use a
+    bot password; the login cookies then ride along on every later request.
+    """
+    tokens = api_get(
+        session, api_url, {"action": "query", "meta": "tokens", "type": "login"}
+    )
+    token = tokens.get("query", {}).get("tokens", {}).get("logintoken")
+    if not token:
+        raise RuntimeError("The API did not return a login token")
+
+    result = api_post(
+        session,
+        api_url,
+        {
+            "action": "login",
+            "lgname": username,
+            "lgpassword": password,
+            "lgtoken": token,
+        },
+    ).get("login", {})
+
+    if result.get("result") != "Success":
+        # `reason` carries the wiki's message; never echo the password.
+        raise RuntimeError(
+            f"Login failed: {result.get('reason') or result.get('result') or result}"
+        )
 
 
 def iter_all_images(

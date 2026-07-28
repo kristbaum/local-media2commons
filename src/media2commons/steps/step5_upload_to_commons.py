@@ -11,31 +11,17 @@ explicit confirmation.
 from __future__ import annotations
 
 import argparse
-import getpass
 import itertools
-import os
 from pathlib import Path
 
 from ..config import DOWNLOAD_DIR, STEP4_RESULT, STEP5_LOG
+from ..credentials import get_credentials
 from ..csv_io import iter_rows
 from ..mediawiki import make_session
 from ..upload_batch import run_batch
 from ..uploader import CommonsUploader, UploadLog, UploadResult
 
 UPLOAD_DELAY = 2.0
-
-
-def get_credentials(username: str | None) -> tuple[str, str]:
-    """Resolve credentials from CLI args, the environment, or an interactive prompt."""
-    username = username or os.environ.get("COMMONS_USERNAME") or input(
-        "Commons username: "
-    ).strip()
-    password = os.environ.get("COMMONS_PASSWORD") or getpass.getpass(
-        "Commons bot password: "
-    )
-    if not username or not password:
-        raise SystemExit("Username and password are required for uploading.")
-    return username, password
 
 
 def print_result(row: dict[str, str], result: UploadResult) -> None:

@@ -8,11 +8,19 @@ import json
 class FakeResponse:
     """Minimal stand-in for :class:`requests.Response`."""
 
-    def __init__(self, payload=None, text: str = "", content: bytes = b"", status=200):
+    def __init__(
+        self,
+        payload=None,
+        text: str = "",
+        content: bytes = b"",
+        status=200,
+        headers=None,
+    ):
         self._payload = payload
         self.text = text or (json.dumps(payload) if payload else "")
         self.content = content
         self.status_code = status
+        self.headers = headers or {}
 
     def raise_for_status(self):
         if self.status_code >= 400:
@@ -41,7 +49,15 @@ class FakeSession:
         self.headers = {}
 
     def get(self, url, params=None, **kwargs):
-        self.calls.append({"url": url, "params": params or {}, "kwargs": kwargs})
+        return self._respond("GET", url, params or {}, kwargs)
+
+    def post(self, url, data=None, **kwargs):
+        return self._respond("POST", url, data or {}, kwargs)
+
+    def _respond(self, method, url, params, kwargs):
+        self.calls.append(
+            {"method": method, "url": url, "params": params, "kwargs": kwargs}
+        )
         if not self._responses:
             raise AssertionError(f"unexpected request to {url}")
         response = self._responses.pop(0)

@@ -34,13 +34,33 @@ def found(sha1s):
     return respond
 
 
+def linked_input(tmp_path, links):
+    """A step 1 file whose rows carry the given ``CommonsLink`` values."""
+    path = tmp_path / "step1.csv"
+    write_rows(
+        path,
+        [
+            {
+                "title": f"Datei:{i}.jpg",
+                "sha1": f"hash{i}",
+                "url": f"u{i}",
+                "UploadCommons": "False",
+                "CommonsLink": link,
+            }
+            for i, link in enumerate(links)
+        ],
+        [*INPUT_FIELDS, "UploadCommons", "CommonsLink"],
+    )
+    return path
+
+
 def test_each_row_gets_a_verdict(tmp_path, input_csv, fake_session):
     output = tmp_path / "step2.csv"
     session = fake_session([found({"hash1"})] * 3)
 
-    processed = check_files(session, input_csv, output, delay=0)
+    summary = check_files(session, input_csv, output, delay=0)
 
-    assert processed == 3
+    assert (summary.written, summary.looked_up) == (3, 3)
     assert [row["exists_on_commons"] for row in read_rows(output)] == [
         "False",
         "True",
@@ -52,9 +72,9 @@ def test_skip_and_limit_select_a_window(tmp_path, input_csv, fake_session):
     output = tmp_path / "step2.csv"
     session = fake_session([found(set())] * 3)
 
-    processed = check_files(session, input_csv, output, skip=1, limit=1, delay=0)
+    summary = check_files(session, input_csv, output, skip=1, limit=1, delay=0)
 
-    assert processed == 1
+    assert summary.written == 1
     assert [row["sha1"] for row in read_rows(output)] == ["hash1"]
 
 
@@ -65,34 +85,49 @@ def test_failed_lookups_are_not_written(tmp_path, input_csv, fake_session):
     output = tmp_path / "step2.csv"
     session = fake_session([found(set()), boom, found(set())])
 
-    processed = check_files(session, input_csv, output, delay=0)
+    summary = check_files(session, input_csv, output, delay=0)
 
-    assert processed == 2
+    assert (summary.written, summary.failed) == (2, 1)
     assert [row["sha1"] for row in read_rows(output)] == ["hash0", "hash2"]
 
 
 def test_step1_commons_columns_are_passed_through(tmp_path, fake_session):
-    input_path = tmp_path / "step1.csv"
-    write_rows(
-        input_path,
-        [
-            {
-                "title": "Datei:0.jpg",
-                "sha1": "hash0",
-                "url": "u0",
-                "UploadCommons": "False",
-                "CommonsLink": "https://commons.wikimedia.org/wiki/File:0.jpg",
-            }
-        ],
-        [*INPUT_FIELDS, "UploadCommons", "CommonsLink"],
-    )
+    input_path = linked_input(tmp_path, [""])
     output = tmp_path / "step2.csv"
 
     check_files(fake_session([found(set())]), input_path, output, delay=0)
 
     row = read_rows(output)[0]
     assert row["UploadCommons"] == "False"
-    assert row["CommonsLink"].endswith("File:0.jpg")
+    assert row["CommonsLink"] == ""
+
+
+def test_linked_files_are_not_looked_up(tmp_path, fake_session):
+    input_path = linked_input(
+        tmp_path, ["https://commons.wikimedia.org/wiki/File:0.jpg", ""]
+    )
+    output = tmp_path / "step2.csv"
+
+    # One queued response: a request for the linked file would raise.
+    session = fake_session([found(set())])
+    summary = check_files(session, input_path, output, delay=0)
+
+    assert (summary.written, summary.looked_up, summary.linked) == (2, 1, 1)
+    assert [row["exists_on_commons"] for row in read_rows(output)] == ["True", "False"]
+    assert [call["params"]["aisha1"] for call in session.calls] == ["hash1"]
+
+
+def test_recheck_linked_looks_them_up_again(tmp_path, fake_session):
+    input_path = linked_input(
+        tmp_path, ["https://commons.wikimedia.org/wiki/File:0.jpg"]
+    )
+    output = tmp_path / "step2.csv"
+
+    session = fake_session([found(set())])
+    summary = check_files(session, input_path, output, delay=0, recheck_linked=True)
+
+    assert (summary.looked_up, summary.linked) == (1, 0)
+    assert read_rows(output)[0]["exists_on_commons"] == "False"
 
 
 def test_rows_already_done_counts_partial_output(tmp_path, input_csv, fake_session):

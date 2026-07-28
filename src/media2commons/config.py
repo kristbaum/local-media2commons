@@ -28,9 +28,23 @@ COMMONS_API = "https://commons.wikimedia.org/w/api.php"
 COMMONS_SITE = "commons.wikimedia.org"
 COMMONS_FILE_URL = "https://commons.wikimedia.org/wiki/File:{filename}"
 
+# Wikimedia requires a User-Agent naming the tool and a way to contact whoever
+# runs it (a URL or an e-mail); requests without one are throttled hardest.
+# See https://meta.wikimedia.org/wiki/User-Agent_policy.
 USER_AGENT = (
     "FuerthWiki-to-Commons-Bot/1.0 (https://github.com/kristbaum/local-media2commons)"
 )
+
+# Wikimedia's API rate limits, in requests per minute: a bot identified only by
+# its User-Agent gets 200, an authenticated established account 2,000.
+# See https://www.mediawiki.org/wiki/Wikimedia_APIs/Rate_limits.
+ANONYMOUS_RATE_LIMIT = 200
+AUTHENTICATED_RATE_LIMIT = 2000
+
+# Delay between Commons requests in step 2, kept a good margin under those
+# limits: 2/s anonymous, 10/s once logged in.
+ANONYMOUS_DELAY = 0.5
+AUTHENTICATED_DELAY = 0.1
 
 # Categories added to every uploaded file.
 COMMONS_CATEGORIES = ["Images from FürthWiki", "Media uploaded from FürthWiki ({year})"]

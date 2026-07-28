@@ -62,11 +62,16 @@ are not guessable.
   not match.
 - Step 2 makes one Commons API request per file and step 5 uploads to a live public
   wiki. Never run either against real endpoints without being asked, and keep the
-  throttling defaults (`--delay`) intact.
+  throttling defaults (`--delay`) intact. Those defaults are derived from Wikimedia's
+  published per-minute rate limits (see `config.py` and the README); lowering one means
+  moving into a bucket the run does not qualify for, and earns a `429`.
+- Every request must carry `config.USER_AGENT` — Wikimedia throttles unidentified
+  clients hardest. That is what `make_session()` is for; do not build a bare
+  `requests.Session()`.
 - Step 5 verifies every download's SHA-1 against the hash from step 1 before uploading.
   That check is the guard against uploading the wrong file under someone else's name —
   do not weaken or bypass it.
 - Only licenses in `licenses.COMMONS_TEMPLATES` may be uploaded. Widening that set is a
   legal decision, not a code decision; ask first.
-- Credentials come from `COMMONS_USERNAME`/`COMMONS_PASSWORD` only. Never write
-  credentials to a file, a log or the repo.
+- Credentials come from `COMMONS_USERNAME`/`COMMONS_PASSWORD` only, via
+  `credentials.get_credentials()`. Never write credentials to a file, a log or the repo.

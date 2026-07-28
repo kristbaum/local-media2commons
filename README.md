@@ -83,6 +83,41 @@ to process an explicit window.
 https://commons.wikimedia.org/w/api.php?action=query&list=allimages&aisha1=fcdfc17fac0c39e6f201f2022f9f1f9f8b35d449&format=json
 ```
 
+Files that already carry a `CommonsLink` from step 1 are recorded as
+`exists_on_commons=True` without asking Commons — the source wiki has already answered
+the question. `--recheck-linked` looks them up anyway.
+
+#### Staying inside Commons' rate limit
+
+Wikimedia [rate-limits the API](https://www.mediawiki.org/wiki/Wikimedia_APIs/Rate_limits)
+per minute, and answers a client that is over its limit with `429 Too Many Requests`:
+
+| Client | Limit |
+| --- | --- |
+| No identifying User-Agent | 10 req/min |
+| Bot identified only by its User-Agent | 200 req/min |
+| Authenticated, new account | 200 req/min |
+| Authenticated, established editor | 2,000 req/min |
+| Account with the bot flag | exempt |
+
+So yes — logging in raises the ceiling, tenfold for an established account. Every request
+already carries the `USER_AGENT` from [config.py](src/media2commons/config.py) (Wikimedia
+requires a tool name plus a contact URL or e-mail), which is what keeps the run out of
+the 10/min bucket.
+
+`--delay` therefore defaults to 0.5 s (120 req/min) anonymously, and to 0.1 s
+(600 req/min) with `--login`, which uses the same `COMMONS_USERNAME`/`COMMONS_PASSWORD`
+[bot password](https://commons.wikimedia.org/wiki/Special:BotPasswords) as step 5. The
+0.1 s default assumes an established account; on a fresh one pass `--delay 0.5`.
+
+```bash
+COMMONS_USERNAME=YourBot COMMONS_PASSWORD=… uv run m2c-step2-commons-check --login
+```
+
+A `429` (or a `503` from an overloaded backend) is no longer counted as a failed lookup:
+the request waits out the server's `Retry-After` and is retried, backing off
+exponentially from 5 s when no such header is sent.
+
 ### Step 3 — extract metadata
 
 Queries the Semantic MediaWiki ASK API in batches of 10 titles for the properties
@@ -143,8 +178,9 @@ COMMONS_USERNAME=YourBot COMMONS_PASSWORD=… uv run m2c-step5-upload --max-file
 ```text
 src/media2commons/
   config.py        endpoints, SMW properties, file paths
+  credentials.py   Commons credentials from the environment or a prompt
   csv_io.py        CSV read/write/append helpers
-  mediawiki.py     MediaWiki + SMW API access
+  mediawiki.py     MediaWiki + SMW API access, login, rate-limit retries
   licenses.py      license normalisation and Commons compatibility
   dates.py         SMW date parsing and year extraction
   wikitext.py      Commons file description page rendering
