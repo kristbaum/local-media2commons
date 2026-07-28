@@ -2,7 +2,13 @@ import pytest
 from helpers import FakeResponse
 
 from media2commons import mediawiki
-from media2commons.mediawiki import api_get, login, make_session, retry_wait
+from media2commons.mediawiki import (
+    api_get,
+    commons_url_for_sha1,
+    login,
+    make_session,
+    retry_wait,
+)
 
 OK = {"query": {"allimages": []}}
 
@@ -63,6 +69,41 @@ def test_other_errors_are_not_retried(fake_session, no_sleep):
         api_get(session, "https://example.org/api.php", {})
 
     assert no_sleep == []
+
+
+def allimages(*matches):
+    return FakeResponse({"query": {"allimages": list(matches)}})
+
+
+def test_a_hash_match_yields_its_file_page(fake_session):
+    page = "https://commons.wikimedia.org/wiki/File:Rathaus.jpg"
+    session = fake_session([allimages({"name": "Rathaus.jpg", "descriptionurl": page})])
+
+    assert commons_url_for_sha1(session, "abc") == page
+
+
+def test_no_match_yields_an_empty_string(fake_session):
+    assert commons_url_for_sha1(fake_session([allimages()]), "abc") == ""
+
+
+def test_the_file_page_is_built_from_the_name_if_needed(fake_session):
+    session = fake_session([allimages({"name": "Rathaus.jpg"})])
+
+    url = commons_url_for_sha1(session, "abc")
+
+    assert url == "https://commons.wikimedia.org/wiki/File:Rathaus.jpg"
+
+
+def test_a_match_without_anything_to_link_to_is_not_a_url(fake_session):
+    assert commons_url_for_sha1(fake_session([allimages({})]), "abc") == ""
+
+
+def test_the_first_of_several_duplicates_is_used(fake_session):
+    session = fake_session(
+        [allimages({"name": "First.jpg"}, {"name": "Second.jpg"})]
+    )
+
+    assert commons_url_for_sha1(session, "abc").endswith("First.jpg")
 
 
 def login_responses(result):

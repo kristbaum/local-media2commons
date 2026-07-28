@@ -1,6 +1,8 @@
-"""Step 2: check for every hash whether that file already exists on Commons.
+"""Step 2: find, for every hash, the file on Commons that already has it.
 
-Reads: ``data/step1_result.csv``. Appends to: ``data/step2_result.csv``.
+Reads: ``data/step1_result.csv``. Appends to: ``data/step2_result.csv``, whose
+``commons_url`` column holds the Commons file page of the match, or is empty
+when the file is not on Commons yet.
 
 The run is long and rate-limited, so results are appended row by row and an
 interrupted run resumes after the rows already written. Files the source wiki
@@ -21,16 +23,19 @@ from ..config import (
     ANONYMOUS_DELAY,
     AUTHENTICATED_DELAY,
     COMMONS_API,
+    COMMONS_URL_FIELD,
     STEP1_RESULT,
     STEP2_RESULT,
 )
 from ..credentials import get_credentials
 from ..csv_io import append_row, iter_rows
-from ..mediawiki import login, make_session, sha1_exists_on_commons
+from ..mediawiki import commons_url_for_sha1, login, make_session
 from .step1_get_hashes import FIELDS as STEP1_FIELDS
 
 # Every input column is passed through, so the two lists cannot drift apart.
-FIELDS = [*STEP1_FIELDS, "exists_on_commons"]
+# ``commons_url`` is empty when there is no match, so the cell is truthy exactly
+# when the file is already on Commons.
+FIELDS = [*STEP1_FIELDS, COMMONS_URL_FIELD]
 
 # The source wiki's own record of a completed transfer. A file it already links
 # to on Commons is on Commons; asking Commons again only spends rate limit.
@@ -43,6 +48,7 @@ class CheckSummary:
 
     written: int = 0
     looked_up: int = 0
+    matched: int = 0
     linked: int = 0
     failed: int = 0
 
@@ -70,7 +76,7 @@ def check_files(
     log_interval: int = 100,
     recheck_linked: bool = False,
 ) -> CheckSummary:
-    """Append an ``exists_on_commons`` verdict for each input row.
+    """Append the matching Commons file page — if any — for each input row.
 
     Rows whose lookup fails are skipped rather than written, so a later resume
     picks them up again.
@@ -86,18 +92,20 @@ def check_files(
 
         linked = not recheck_linked and is_linked_to_commons(row)
         if linked:
-            exists = True
+            # The source wiki already knows where the file went; use its link.
+            commons_url = row[COMMONS_LINK_FIELD].strip()
             summary.linked += 1
         else:
             try:
-                exists = sha1_exists_on_commons(session, row["sha1"])
+                commons_url = commons_url_for_sha1(session, row["sha1"])
             except Exception as exc:
                 print(f"Error processing '{row['title']}': {exc}")
                 summary.failed += 1
                 continue
             summary.looked_up += 1
+            summary.matched += bool(commons_url)
 
-        append_row(output_path, {**row, "exists_on_commons": exists}, FIELDS)
+        append_row(output_path, {**row, COMMONS_URL_FIELD: commons_url}, FIELDS)
         summary.written += 1
 
         if summary.written % log_interval == 0:
@@ -171,8 +179,8 @@ def main() -> None:
     )
     print(
         f"Wrote {summary.written:,} rows to {args.output} "
-        f"({summary.looked_up:,} looked up on Commons, "
-        f"{summary.linked:,} already linked, {summary.failed:,} failed)"
+        f"({summary.looked_up:,} looked up on Commons, {summary.matched:,} of them "
+        f"already there; {summary.linked:,} already linked, {summary.failed:,} failed)"
     )
 
 

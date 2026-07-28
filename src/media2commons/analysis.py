@@ -6,6 +6,7 @@ from collections import Counter
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 
+from .config import COMMONS_URL_FIELD, LEGACY_COMMONS_URL_FIELD
 from .dates import extract_year
 from .licenses import is_commons_compatible, normalize_license
 
@@ -52,8 +53,26 @@ class MediaStats:
         return count / self.total_images * 100
 
 
+def commons_url_of(row: dict[str, str]) -> str:
+    """The Commons file page step 2 found for this row, or ``""``.
+
+    Result files predating the column rename carry the same verdict under
+    ``exists_on_commons``, as ``True``/``False`` rather than a URL.
+    """
+    return (
+        row.get(COMMONS_URL_FIELD)
+        or row.get(LEGACY_COMMONS_URL_FIELD, "")
+    ).strip()
+
+
 def row_is_on_commons(row: dict[str, str]) -> bool:
-    return row.get("exists_on_commons", "").strip().lower() == "true"
+    """Whether step 2 found this file on Commons.
+
+    An empty cell means "not there"; so does the legacy ``False``, which is
+    truthy as a string and would otherwise read as a match.
+    """
+    value = commons_url_of(row)
+    return bool(value) and value.lower() != "false"
 
 
 def analyze_rows(rows: Iterable[dict[str, str]]) -> MediaStats:

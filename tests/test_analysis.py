@@ -16,16 +16,24 @@ ROWS = [
         Beschreibung="",
         Urheber="",
         Quellangaben="",
-        exists_on_commons="True",
+        commons_url="https://commons.wikimedia.org/wiki/File:D.jpg",
     ),
 ]
 
 
-def test_row_is_on_commons_accepts_any_casing():
+def test_a_commons_url_means_the_file_is_there():
+    url = "https://commons.wikimedia.org/wiki/File:A.jpg"
+    assert row_is_on_commons({"commons_url": url})
+    assert not row_is_on_commons({"commons_url": ""})
+    assert not row_is_on_commons({"commons_url": "  "})
+    assert not row_is_on_commons({})
+
+
+def test_result_files_predating_the_column_rename_still_read():
     assert row_is_on_commons({"exists_on_commons": "True"})
     assert row_is_on_commons({"exists_on_commons": "true"})
     assert not row_is_on_commons({"exists_on_commons": "False"})
-    assert not row_is_on_commons({})
+    assert not row_is_on_commons({"exists_on_commons": ""})
 
 
 def test_totals():

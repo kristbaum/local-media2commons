@@ -23,7 +23,7 @@ both as a console script and as a module.
 | Step | Command | Reads | Writes |
 | --- | --- | --- | --- |
 | 1. List files, hashes, transfer status | `uv run m2c-step1-hashes` | local wiki API | `data/step1_result.csv` |
-| 2. Check against Commons | `uv run m2c-step2-commons-check` | `step1_result.csv` | `data/step2_result.csv` |
+| 2. Find matches on Commons | `uv run m2c-step2-commons-check` | `step1_result.csv` | `data/step2_result.csv` |
 | 3. Extract SMW metadata | `uv run m2c-step3-metadata` | `step2_result.csv` | `data/step3_result.csv` |
 | 3b. Analysis report | `uv run m2c-step3-report` | `step3_result.csv` | `data/step3_report.txt` |
 | 4. Transform for Commons | `uv run m2c-step4-transform` | `step3_result.csv` | `data/step4_commons_ready.csv` |
@@ -63,15 +63,15 @@ https://www.fuerthwiki.de/wiki/api.php?action=ask&query=[[UploadCommons::%2B]] O
 
 Paging continues with `offset=500`, `1000`, … until a page comes back short. A file the
 query says nothing about keeps both cells empty, which is distinct from an explicit
-`False`. SMW answers booleans with `t`/`f`; they are written out as `True`/`False` to
-match `exists_on_commons`. Use `--no-smw` on a wiki without Semantic MediaWiki: the
-columns stay in the CSV but are left empty.
+`False`. SMW answers booleans with `t`/`f`; they are written out as `True`/`False`. Use
+`--no-smw` on a wiki without Semantic MediaWiki: the columns stay in the CSV but are
+left empty.
 
 As of July 2026 the source wiki marks 733 files `UploadCommons=true` and sets
 `CommonsLink` on none, so the column is currently a record of past manual transfers
 rather than of anything this pipeline did.
 
-### Step 2 — check what is already on Commons
+### Step 2 — find what is already on Commons
 
 Looks each SHA-1 up via `list=allimages&aisha1=…` on Commons; a non-empty result means
 the identical file is already there. This is the long-running step (one request per
@@ -83,9 +83,24 @@ to process an explicit window.
 https://commons.wikimedia.org/w/api.php?action=query&list=allimages&aisha1=fcdfc17fac0c39e6f201f2022f9f1f9f8b35d449&format=json
 ```
 
-Files that already carry a `CommonsLink` from step 1 are recorded as
-`exists_on_commons=True` without asking Commons — the source wiki has already answered
-the question. `--recheck-linked` looks them up anyway.
+The `commons_url` column holds the `descriptionurl` of the match — the Commons file page
+carrying those exact bytes — and is empty when there is none, so the cell both answers
+the question and says which file answered it:
+
+| `commons_url` | Meaning |
+| --- | --- |
+| `https://commons.wikimedia.org/wiki/File:…` | the identical file is on Commons, here |
+| *(empty)* | not on Commons |
+
+Commons can hold the same bytes under several names; the first match is the one
+recorded. Files that already carry a `CommonsLink` from step 1 get that link written
+straight through without asking Commons — the source wiki has already answered the
+question. `--recheck-linked` looks them up anyway.
+
+Everything downstream treats the column as "non-empty means on Commons"
+([`row_is_on_commons`](src/media2commons/analysis.py)). The column was called
+`exists_on_commons` and held `True`/`False` until July 2026; result files from before
+then are still read correctly, so an interrupted run can be resumed into one.
 
 #### Staying inside Commons' rate limit
 

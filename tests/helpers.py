@@ -70,7 +70,7 @@ def step3_row(**overrides) -> dict[str, str]:
         "title": "Datei:Rathaus.jpg",
         "sha1": "abc123",
         "url": "https://www.fuerthwiki.de/wiki/index.php/Datei:Rathaus.jpg",
-        "exists_on_commons": "False",
+        "commons_url": "",
         "Beschreibung": "Das [[Rathaus]] von Fürth",
         "Erstellungsdatum": "1950-06",
         "Erstellungsjahr": "",

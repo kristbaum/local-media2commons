@@ -6,6 +6,8 @@ from media2commons.transform import (
     transform_rows,
 )
 
+ON_COMMONS = "https://commons.wikimedia.org/wiki/File:X.jpg"
+
 
 def test_compatible_row_is_transformed():
     row = to_commons_row(step3_row(), year=2025)
@@ -22,8 +24,9 @@ def test_compatible_row_is_transformed():
 
 
 def test_files_already_on_commons_are_skipped():
+    assert to_commons_row(step3_row(commons_url=ON_COMMONS)) is None
+    # A result file written before the column held a URL.
     assert to_commons_row(step3_row(exists_on_commons="True")) is None
-    assert to_commons_row(step3_row(exists_on_commons="true")) is None
 
 
 def test_incompatible_licenses_are_skipped():
@@ -55,7 +58,7 @@ def test_transform_rows_filters_the_stream():
     rows = [
         step3_row(title="Datei:A.jpg"),
         step3_row(title="Datei:B.jpg", Lizenz="copyright"),
-        step3_row(title="Datei:C.jpg", exists_on_commons="True"),
+        step3_row(title="Datei:C.jpg", commons_url=ON_COMMONS),
         step3_row(title="Datei:D.jpg", Lizenz="cc-by-sa-4.0"),
     ]
 

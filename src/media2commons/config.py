@@ -12,6 +12,12 @@ LOCAL_WIKI_FILE_PAGE = "https://www.fuerthwiki.de/wiki/index.php/{title}"
 # transferred. Read in step 1, next to the file list itself.
 SMW_COMMONS_PROPERTIES = ["UploadCommons", "CommonsLink"]
 
+# The column step 2 writes: the Commons file page holding the identical bytes,
+# empty when there is none. Result files written before it held a URL called it
+# `exists_on_commons` and put `True`/`False` there; both are still read.
+COMMONS_URL_FIELD = "commons_url"
+LEGACY_COMMONS_URL_FIELD = "exists_on_commons"
+
 # Semantic MediaWiki properties fetched in step 3.
 SMW_PROPERTIES = [
     "Beschreibung",

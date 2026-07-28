@@ -24,11 +24,20 @@ def input_csv(tmp_path):
     return path
 
 
+def commons_page(sha1):
+    return f"https://commons.wikimedia.org/wiki/File:{sha1}.jpg"
+
+
 def found(sha1s):
     """Response factory: report a match only for the given hashes."""
 
     def respond(url, params):
-        images = [{"name": "x"}] if params["aisha1"] in sha1s else []
+        sha1 = params["aisha1"]
+        images = (
+            [{"name": f"{sha1}.jpg", "descriptionurl": commons_page(sha1)}]
+            if sha1 in sha1s
+            else []
+        )
         return FakeResponse({"query": {"allimages": images}})
 
     return respond
@@ -54,17 +63,17 @@ def linked_input(tmp_path, links):
     return path
 
 
-def test_each_row_gets_a_verdict(tmp_path, input_csv, fake_session):
+def test_a_match_is_written_as_its_commons_url(tmp_path, input_csv, fake_session):
     output = tmp_path / "step2.csv"
     session = fake_session([found({"hash1"})] * 3)
 
     summary = check_files(session, input_csv, output, delay=0)
 
-    assert (summary.written, summary.looked_up) == (3, 3)
-    assert [row["exists_on_commons"] for row in read_rows(output)] == [
-        "False",
-        "True",
-        "False",
+    assert (summary.written, summary.looked_up, summary.matched) == (3, 3, 1)
+    assert [row["commons_url"] for row in read_rows(output)] == [
+        "",
+        commons_page("hash1"),
+        "",
     ]
 
 
@@ -103,9 +112,8 @@ def test_step1_commons_columns_are_passed_through(tmp_path, fake_session):
 
 
 def test_linked_files_are_not_looked_up(tmp_path, fake_session):
-    input_path = linked_input(
-        tmp_path, ["https://commons.wikimedia.org/wiki/File:0.jpg", ""]
-    )
+    link = "https://commons.wikimedia.org/wiki/File:0.jpg"
+    input_path = linked_input(tmp_path, [link, ""])
     output = tmp_path / "step2.csv"
 
     # One queued response: a request for the linked file would raise.
@@ -113,7 +121,8 @@ def test_linked_files_are_not_looked_up(tmp_path, fake_session):
     summary = check_files(session, input_path, output, delay=0)
 
     assert (summary.written, summary.looked_up, summary.linked) == (2, 1, 1)
-    assert [row["exists_on_commons"] for row in read_rows(output)] == ["True", "False"]
+    # The wiki's own link stands in for the one a lookup would have returned.
+    assert [row["commons_url"] for row in read_rows(output)] == [link, ""]
     assert [call["params"]["aisha1"] for call in session.calls] == ["hash1"]
 
 
@@ -127,7 +136,7 @@ def test_recheck_linked_looks_them_up_again(tmp_path, fake_session):
     summary = check_files(session, input_path, output, delay=0, recheck_linked=True)
 
     assert (summary.looked_up, summary.linked) == (1, 0)
-    assert read_rows(output)[0]["exists_on_commons"] == "False"
+    assert read_rows(output)[0]["commons_url"] == ""
 
 
 def test_rows_already_done_counts_partial_output(tmp_path, input_csv, fake_session):

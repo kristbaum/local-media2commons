@@ -11,7 +11,7 @@ from collections.abc import Iterable, Iterator, Sequence
 
 import requests
 
-from .config import COMMONS_API, USER_AGENT
+from .config import COMMONS_API, COMMONS_FILE_URL, USER_AGENT
 
 # How many results to request per page of an ASK query.
 ASK_PAGE_SIZE = 500
@@ -26,8 +26,8 @@ MAX_RETRIES = 5
 # for at least five seconds, doubling per attempt.
 BASE_RETRY_WAIT = 5.0
 
-# SMW answers boolean printouts with these tokens; the rest of the pipeline
-# writes Python-style booleans (see ``exists_on_commons``), so map them over.
+# SMW answers boolean printouts with these tokens; the pipeline writes
+# Python-style booleans (see the ``UploadCommons`` column), so map them over.
 BOOLEAN_TYPEID = "_boo"
 SMW_BOOLEANS = {"t": "True", "f": "False"}
 
@@ -138,14 +138,28 @@ def iter_all_images(
         params = {**params, "aicontinue": cont}
 
 
-def sha1_exists_on_commons(session: requests.Session, sha1: str) -> bool:
-    """Whether a file with this SHA-1 is already on Wikimedia Commons."""
+def commons_url_for_sha1(session: requests.Session, sha1: str) -> str:
+    """The Commons file page of the file with this SHA-1, or ``""`` if there is none.
+
+    Commons may hold the same bytes under several names; the first match is
+    enough to say the file is already there, and names the copy to link to.
+    """
     data = api_get(
         session,
         COMMONS_API,
         {"action": "query", "list": "allimages", "aisha1": sha1},
     )
-    return bool(data.get("query", {}).get("allimages"))
+    matches = data.get("query", {}).get("allimages") or []
+    if not matches:
+        return ""
+
+    match = matches[0]
+    if match.get("descriptionurl"):
+        return match["descriptionurl"]
+
+    # Only reachable if the API stops sending descriptionurl by default.
+    name = match.get("name") or match.get("title", "").removeprefix("File:")
+    return COMMONS_FILE_URL.format(filename=name) if name else ""
 
 
 def build_ask_query(titles: Iterable[str], properties: Iterable[str]) -> str:
