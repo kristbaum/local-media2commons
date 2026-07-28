@@ -117,6 +117,86 @@ def login(
         )
 
 
+def csrf_token(session: requests.Session, api_url: str) -> str:
+    """The edit token for the logged-in session on this wiki."""
+    data = api_get(session, api_url, {"action": "query", "meta": "tokens"})
+    token = data.get("query", {}).get("tokens", {}).get("csrftoken")
+    if not token or token == "+\\":
+        raise RuntimeError("No edit token; the session is not logged in")
+    return token
+
+
+def page_wikitext(
+    session: requests.Session, api_url: str, title: str
+) -> tuple[str, str] | None:
+    """The current wikitext of a page and its revision timestamp.
+
+    ``None`` when the page does not exist — plenty of files were uploaded
+    without ever getting a description page.
+    """
+    data = api_get(
+        session,
+        api_url,
+        {
+            "action": "query",
+            "prop": "revisions",
+            "titles": title,
+            "rvprop": "content|timestamp",
+            "rvslots": "main",
+            "formatversion": "2",
+        },
+    )
+    pages = data.get("query", {}).get("pages") or []
+    if not pages or pages[0].get("missing"):
+        return None
+
+    revisions = pages[0].get("revisions") or []
+    if not revisions:
+        return None
+
+    revision = revisions[0]
+    content = revision.get("slots", {}).get("main", {}).get("content", "")
+    return content, revision.get("timestamp", "")
+
+
+def edit_page(
+    session: requests.Session,
+    api_url: str,
+    title: str,
+    text: str,
+    summary: str,
+    token: str,
+    basetimestamp: str = "",
+) -> dict:
+    """Replace a page's wikitext, raising on anything but a saved edit.
+
+    `basetimestamp` is the revision the new text was built from; the wiki
+    rejects the edit if someone else has saved since.
+    """
+    params = {
+        "action": "edit",
+        "title": title,
+        "text": text,
+        "summary": summary,
+        "token": token,
+        # Step 2b annotates existing file pages; it must never create one.
+        "nocreate": "1",
+        "assert": "user",
+    }
+    if basetimestamp:
+        params["basetimestamp"] = basetimestamp
+
+    data = api_post(session, api_url, params)
+    if "error" in data:
+        error = data["error"]
+        raise RuntimeError(f"{error.get('code')}: {error.get('info', error)}")
+
+    result = data.get("edit", {})
+    if result.get("result") != "Success":
+        raise RuntimeError(f"Edit not saved: {result or data}")
+    return result
+
+
 def iter_all_images(
     session: requests.Session, api_url: str, batch_size: int = 500
 ) -> Iterator[dict]:

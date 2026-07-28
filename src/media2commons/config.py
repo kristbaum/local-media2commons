@@ -9,8 +9,18 @@ LOCAL_WIKI_BASE = "https://www.fuerthwiki.de"
 LOCAL_WIKI_FILE_PAGE = "https://www.fuerthwiki.de/wiki/index.php/{title}"
 
 # Semantic MediaWiki properties recording what the source wiki already considers
-# transferred. Read in step 1, next to the file list itself.
+# transferred. Read in step 1, next to the file list itself, and written back by
+# step 2b.
 SMW_COMMONS_PROPERTIES = ["UploadCommons", "CommonsLink"]
+UPLOAD_COMMONS_PROPERTY, COMMONS_LINK_PROPERTY = SMW_COMMONS_PROPERTIES
+
+# File pages carry their metadata as parameters of one form template, so that is
+# where step 2b writes. Every media type has its own; a page whose first
+# template is none of these is left alone.
+FORM_TEMPLATES = ["Bild", "Audio", "Video"]
+
+# The source wiki spells Semantic MediaWiki booleans in German.
+SMW_TRUE = "Ja"
 
 # The column step 2 writes: the Commons file page holding the identical bytes,
 # empty when there is none. Result files written before it held a URL called it
@@ -62,6 +72,7 @@ DOWNLOAD_DIR = PROJECT_ROOT / "downloads"
 
 STEP1_RESULT = DATA_DIR / "step1_result.csv"
 STEP2_RESULT = DATA_DIR / "step2_result.csv"
+STEP2B_LOG = DATA_DIR / "step2b_update_log.csv"
 STEP3_RESULT = DATA_DIR / "step3_result.csv"
 STEP3_REPORT = DATA_DIR / "step3_report.txt"
 STEP4_RESULT = DATA_DIR / "step4_commons_ready.csv"

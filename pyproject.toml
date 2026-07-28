@@ -13,6 +13,7 @@ dependencies = [
 [project.scripts]
 m2c-step1-hashes = "media2commons.steps.step1_get_hashes:main"
 m2c-step2-commons-check = "media2commons.steps.step2_check_commons:main"
+m2c-step2b-update-smw = "media2commons.steps.step2b_update_smw:main"
 m2c-step3-metadata = "media2commons.steps.step3_extract_metadata:main"
 m2c-step3-report = "media2commons.steps.step3_generate_report:main"
 m2c-step4-transform = "media2commons.steps.step4_transform_for_commons:main"

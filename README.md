@@ -24,6 +24,7 @@ both as a console script and as a module.
 | --- | --- | --- | --- |
 | 1. List files, hashes, transfer status | `uv run m2c-step1-hashes` | local wiki API | `data/step1_result.csv` |
 | 2. Find matches on Commons | `uv run m2c-step2-commons-check` | `step1_result.csv` | `data/step2_result.csv` |
+| 2b. Write the status back to the source wiki | `uv run m2c-step2b-update-smw` | `step2_result.csv` | source wiki, `data/step2b_update_log.csv` |
 | 3. Extract SMW metadata | `uv run m2c-step3-metadata` | `step2_result.csv` | `data/step3_result.csv` |
 | 3b. Analysis report | `uv run m2c-step3-report` | `step3_result.csv` | `data/step3_report.txt` |
 | 4. Transform for Commons | `uv run m2c-step4-transform` | `step3_result.csv` | `data/step4_commons_ready.csv` |
@@ -133,6 +134,67 @@ A `429` (or a `503` from an overloaded backend) is no longer counted as a failed
 the request waits out the server's `Retry-After` and is retried, backing off
 exponentially from 5 s when no such header is sent.
 
+### Step 2b — write the status back to the source wiki
+
+Step 2 discovers what is already on Commons; this step tells the source wiki about it,
+so the two `UploadCommons`/`CommonsLink` columns step 1 reads stop being a record of
+manual transfers only. Every row with a `commons_url` has its file page edited:
+
+```diff
+ |ZeigeNichtInStraße=Nein
+-|UploadCommons=Nein
++|UploadCommons=Ja
+ |Erstellungsdatum=1971
+ |Beschreibung=Luftbild des "alten" Gänsbergs zu Beginn der [[Flächensanierung]], ca. 1971
++|CommonsLink='Alter' Gänsberg.jpg
+ }}
+```
+
+`CommonsLink` is the file name the URL points at — everything after `File:`,
+percent-decoded, with the URL's underscores turned back into spaces. The properties are
+set as parameters of the page's form template (`{{Bild}}`, `{{Audio}}`, `{{Video}}`),
+which is how everything else on those pages is stored; existing parameters are
+overwritten in place and missing ones appended, leaving the rest of the page byte for
+byte as it was. A page that already says both is left alone, so the step is safe to
+re-run and only ever writes the pages that need it.
+
+This is the one step that writes to the source wiki, so: it asks for confirmation unless
+`--yes`, `--dry-run` reports what would change without logging in at all, `--max-pages`
+bounds a run, and every page is logged to `data/step2b_update_log.csv` — a later run
+skips what that log already settled (`--redo` visits them anyway). Credentials come from
+`LOCAL_WIKI_USERNAME`/`LOCAL_WIKI_PASSWORD` and are prompted for otherwise. Start with a
+dry run:
+
+```bash
+uv run m2c-step2b-update-smw --dry-run --max-pages 20
+LOCAL_WIKI_USERNAME=YourBot LOCAL_WIKI_PASSWORD=… uv run m2c-step2b-update-smw --max-pages 5
+```
+
+#### `CommonsLink` has to be declared on the wiki first
+
+The form module only stores parameters that belong to an attribute's class, and
+[Attribut:CommonsLink](https://www.fuerthwiki.de/wiki/index.php?title=Attribut:CommonsLink)
+currently declares only its datatype:
+
+```wikitext
+{{Attribut|Datentyp=Text}}
+{{Attribut/Hilfe}}
+```
+
+Every stored attribute — `UploadCommons`, `Quellangaben`, `Beschreibung` — also has an
+`{{Attribut/Klasse}}` block, and a parse probe confirms that `{{Bild|CommonsLink=…}}` is
+dropped today while `{{Bild|Quellangaben=…}}` is kept. Until a block like this is added
+to that page, step 2b's edits will set `UploadCommons` but `CommonsLink` will not become
+a queryable property:
+
+```wikitext
+{{Attribut/Klasse
+|KlassenName=Default
+|FieldArgs=input type{{=}}text{{!}}size{{=}}65
+|Infotext=Dateiname auf Wikimedia Commons
+}}
+```
+
 ### Step 3 — extract metadata
 
 Queries the Semantic MediaWiki ASK API in batches of 10 titles for the properties
@@ -195,10 +257,11 @@ src/media2commons/
   config.py        endpoints, SMW properties, file paths
   credentials.py   Commons credentials from the environment or a prompt
   csv_io.py        CSV read/write/append helpers
-  mediawiki.py     MediaWiki + SMW API access, login, rate-limit retries
+  mediawiki.py     MediaWiki + SMW API access, login, editing, rate-limit retries
   licenses.py      license normalisation and Commons compatibility
   dates.py         SMW date parsing and year extraction
-  wikitext.py      Commons file description page rendering
+  wikitext.py      Commons page rendering, source wiki form-template editing
+  smw_update.py    writing the transfer status back onto source wiki pages
   transform.py     step 3 rows -> upload-ready rows
   analysis.py      statistics over the metadata dump
   reporting.py     text rendering of those statistics

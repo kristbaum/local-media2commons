@@ -60,6 +60,13 @@ are not guessable.
   `--output /tmp/...` when smoke-testing. Note that `step3_report.txt` came from a full
   37,790-file run while the committed `step3_result.csv` is a small sample, so they do
   not match.
+- Steps 2b and 5 write to live wikis — 2b edits FürthWiki's file pages, 5 uploads to
+  Commons. Never run either against real endpoints without being asked; `--dry-run`
+  (2b) is the safe way to try one out. Both keep an append-only log and both must keep
+  asking for confirmation unless `--yes` is given.
+- Step 2b rewrites existing wikitext, so it must stay a minimal edit: set the two
+  parameters in the page's form template and change nothing else. `basetimestamp` on
+  the edit is what stops it overwriting somebody's concurrent change — keep it.
 - Step 2 makes one Commons API request per file and step 5 uploads to a live public
   wiki. Never run either against real endpoints without being asked, and keep the
   throttling defaults (`--delay`) intact. Those defaults are derived from Wikimedia's
@@ -73,5 +80,7 @@ are not guessable.
   do not weaken or bypass it.
 - Only licenses in `licenses.COMMONS_TEMPLATES` may be uploaded. Widening that set is a
   legal decision, not a code decision; ask first.
-- Credentials come from `COMMONS_USERNAME`/`COMMONS_PASSWORD` only, via
-  `credentials.get_credentials()`. Never write credentials to a file, a log or the repo.
+- Credentials come from the environment only, via `credentials.py`:
+  `COMMONS_USERNAME`/`COMMONS_PASSWORD` for Commons, `LOCAL_WIKI_USERNAME`/
+  `LOCAL_WIKI_PASSWORD` for the source wiki. Never write credentials to a file, a log
+  or the repo.
